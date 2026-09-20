@@ -1,0 +1,15 @@
+locator: Front Gate
+prompt: "\n> "
+error: "'%s' is not a command. Try L, C or Q."
+bind:
+  - keys: [l, login]
+    action: login
+  - keys: [c, create, new]
+    action: register
+  - keys: [q, quit, hangup, hang]
+    action: quit
+---
+{blank}
+{cyan}  [L]ogin{reset}
+{green}  [C]reate a new account{reset}
+{red}  [Q]uit / hang up{reset}

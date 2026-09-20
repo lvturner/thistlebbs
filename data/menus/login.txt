@@ -1,0 +1,3 @@
+locator: Existing User Login
+rule: "Login"
+---

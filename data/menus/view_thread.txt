@@ -1,0 +1,22 @@
+locator: View Thread
+rule: "{title}"
+bind:
+  - keys: [q, quit]
+    action: quit
+  - keys: [r, reply]
+    action: reply
+  - keys: [n, next]
+    action: next
+  - keys: [p, prev]
+    action: prev
+  - keys: [t, top]
+    action: top
+  - keys: [b, bottom]
+    action: bottom
+---
+{rule_title}
+---post---
+{post}
+{pad}
+{meta}
+{blank}

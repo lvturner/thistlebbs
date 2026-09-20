@@ -1,0 +1,18 @@
+locator: "Main Menu"
+rule: "Main"
+prompt: "\n> "
+error: "'%s' is not a command. Try R, P, L or Q."
+bind:
+  - keys: [r, read]
+    action: read
+  - keys: [p, profile]
+    action: profile
+  - keys: [l, logout]
+    action: logout
+  - keys: [q, quit, hangup, hang]
+    action: quit
+---
+{cyan}  [R]ead board{reset}
+{yellow}  [P]rofile{reset}
+{yellow}  [L]ogout{reset}
+{red}  [Q]uit / hang up{reset}

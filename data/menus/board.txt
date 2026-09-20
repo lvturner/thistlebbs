@@ -1,0 +1,3 @@
+locator: "Message Board - page {page} of {pages}"
+rule: "Board"
+---

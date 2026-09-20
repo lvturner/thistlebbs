@@ -1,0 +1,3 @@
+locator: New Account Registration
+rule: "Join Us!"
+---

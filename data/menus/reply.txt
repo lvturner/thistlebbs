@@ -1,0 +1,6 @@
+locator: Reply to thread
+rule: ""
+---
+{black}Write your reply.  End the message with '.' on its own line.{reset}
+{black}Ctrl-C aborts.{reset}
+

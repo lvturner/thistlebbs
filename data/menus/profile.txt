@@ -1,0 +1,18 @@
+locator: "Profile: {user_username}"
+rule: "Profile"
+prompt: "> "
+error: "'%s' is not a command."
+bind:
+  - keys: [e, edit]
+    action: edit
+  - keys: [q, quit]
+    action: quit
+---
+  {cyan}Username      {reset}: {white}{user_username}{reset}
+  {cyan}Location      {reset}: {white}{user_location}{reset}
+  {cyan}Bio           {reset}: {white}{user_bio}{reset}
+  {cyan}Member since  {reset}: {white}{user_joined}{reset}
+  {cyan}Threads       {reset}: {white}{user_threads}{reset}
+  {cyan}Posts written {reset}: {white}{user_posts}{reset}
+{rule}
+{black}  [E]dit profile  [Q]uit{reset}
