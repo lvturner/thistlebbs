@@ -12,7 +12,7 @@ bind:
   - keys: [q, quit, hangup, hang]
     action: quit
 ---
-{cyan}  [R]ead board{reset}
-{yellow}  [P]rofile{reset}
+{green}  [R]ead board{reset}
+{cyan}  [P]rofile{reset}
 {yellow}  [L]ogout{reset}
 {red}  [Q]uit / hang up{reset}

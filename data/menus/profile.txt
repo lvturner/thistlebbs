@@ -14,5 +14,7 @@ bind:
   {cyan}Member since  {reset}: {white}{user_joined}{reset}
   {cyan}Threads       {reset}: {white}{user_threads}{reset}
   {cyan}Posts written {reset}: {white}{user_posts}{reset}
+
 {rule}
-{black}  [E]dit profile  [Q]uit{reset}
+
+{black}  {green}[E]dit profile{reset}  {red}[Q]uit{reset}

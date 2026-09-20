@@ -703,9 +703,42 @@ func (s *Session) newThread() error {
 func (s *Session) profile() error {
 	for {
 		threads, posts, _ := s.cfg.Store.UserStats(s.user.ID)
+		u := s.user
+		tmpl := s.cfg.menus["profile"]
+		if tmpl != nil {
+			vars := map[string]string{
+				"user_username": u.Username,
+				"user_location": orDash(u.Location),
+				"user_bio":    orDash(u.Bio),
+				"user_joined": dateOf(u.JoinedAt),
+				"user_threads": fmt.Sprintf("%d", threads),
+				"user_posts":  fmt.Sprintf("%d", posts),
+			}
+			s.header(tmpl.RenderLocator(vars), tmpl.RenderRule(vars))
+			s.print(tmpl.Render(vars, s.contentWidth()))
+			prompt := tmpl.Prompt
+			if prompt == "" {
+				prompt = "> "
+			}
+			choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, prompt), false)
+			if err != nil {
+				return err
+			}
+			switch tmpl.MatchInput(choice) {
+			case "edit":
+				if err := s.editProfile(); err != nil {
+					return err
+				}
+			case "quit":
+				return nil
+			default:
+				s.err(tmpl.Errorf(choice))
+			}
+			continue
+		}
+		// Fallback: hardcoded
 		s.header("Profile: "+s.user.Username, s.ruleTitle("profile", map[string]string{"user_username": s.user.Username}))
 		s.drawRule("")
-		u := s.user
 		s.printf("  "+ansi.Paint(ansi.BrightCyan, "Username      ")+": %s\n", ansi.Paint(ansi.BrightWhite, u.Username))
 		s.printf("  "+ansi.Paint(ansi.BrightCyan, "Location      ")+": %s\n", ansi.Paint(ansi.BrightWhite, orDash(u.Location)))
 		s.printf("  "+ansi.Paint(ansi.BrightCyan, "Bio           ")+": %s\n", ansi.Paint(ansi.BrightWhite, orDash(u.Bio)))
