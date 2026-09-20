@@ -5,7 +5,7 @@ modern interpretation of old BBS systems — it is not intended to be historical
 or "scene" accurate. Its primary use case is
 [bbs.futurepast.online](https://bbs.futurepast.online).
 
-Connect with any telnet client (or the `kbbs` KDE BBS client).
+Connect with any telnet client.
 
 ## Features
 
