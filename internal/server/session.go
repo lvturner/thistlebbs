@@ -68,6 +68,13 @@ func (q *inputQueue) readByte() (byte, error) {
 	return b, nil
 }
 
+const (
+	// screenWidth and screenHeight are the standard BBS canvas the server
+	// renders to. Client window sizes (NAWS) are honoured up to these bounds.
+	screenWidth  = 80
+	screenHeight = 25
+)
+
 // Session is one telnet client: the wire layer plus the menu state machine.
 // The read loop and the screen code run on different goroutines and talk
 // through the input queue.
@@ -101,8 +108,8 @@ func newSession(conn net.Conn, cfg *Config, id int64) *Session {
 		in:     newInputQueue(),
 		now:    func() int64 { return unixNow() },
 		board:  board,
-		width:  80,
-		height: 24,
+		width:  screenWidth,
+		height: screenHeight,
 	}
 }
 
@@ -181,11 +188,11 @@ func (s *Session) heightOr(def int) int {
 
 // contentWidth returns the usable character columns after reserving a 1-char
 // pad on the left and right of the screen.
-func (s *Session) contentWidth() int { return s.widthOr(80) - 2 }
+func (s *Session) contentWidth() int { return s.widthOr(screenWidth) - 2 }
 
 // contentHeight returns the usable rows after reserving a 1-char pad at the
 // top and bottom of the screen.
-func (s *Session) contentHeight() int { return s.heightOr(24) - 2 }
+func (s *Session) contentHeight() int { return s.heightOr(screenHeight) - 2 }
 
 // -- read loop --------------------------------------------------------------
 
@@ -216,10 +223,10 @@ func (s *Session) readLoop() {
 
 func (s *Session) applyDims() {
 	if w := s.policy.Width; w > 0 && w != s.width {
-		s.width = w
+		s.width = min(w, screenWidth)
 	}
 	if h := s.policy.Height; h > 0 && h != s.height {
-		s.height = h
+		s.height = min(h, screenHeight)
 	}
 }
 

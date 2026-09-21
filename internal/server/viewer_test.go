@@ -41,12 +41,29 @@ func TestPostPages(t *testing.T) {
 }
 
 func TestPostMeta(t *testing.T) {
-	if got := postMeta(0, 1, 1, 0); got != "Post 1 of 1  |  1 message, 0 replies  |  type a number to jump" {
+	if got := postMeta(0, 1, 1, 0); got != "Post 1 of 1  |  1 message, 0 replies" {
 		t.Errorf("single post: got %q", got)
 	}
-	want := "Post 3 of 12  |  12 messages, 11 replies  |  msg page 2 of 3  |  type a number to jump"
+	want := "Post 3 of 12  |  12 messages, 11 replies  |  msg page 2 of 3"
 	if got := postMeta(2, 12, 3, 1); got != want {
 		t.Errorf("multi post: got %q, want %q", got, want)
+	}
+}
+
+func TestViewBudget(t *testing.T) {
+	cases := []struct {
+		contentHeight int
+		want          int
+	}{
+		{23, 17}, // standard 80x25 canvas: contentHeight() - frame
+		{6, 1},   // frame alone leaves no body budget
+		{2, 1},   // tiny screens floor at one line
+		{0, 1},
+	}
+	for _, c := range cases {
+		if got := viewBudget(c.contentHeight); got != c.want {
+			t.Errorf("viewBudget(%d) = %d; want %d", c.contentHeight, got, c.want)
+		}
 	}
 }
 

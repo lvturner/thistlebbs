@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
 	"thistlebbs/internal/ansi"
 	"thistlebbs/internal/store"
 )
@@ -51,6 +52,15 @@ func postBlock(p store.Post, now int64, body []string, sub, budget int) []string
 	return lines
 }
 
+// viewBudget returns how many wrapped body lines one post page can show
+// within contentHeight terminal rows, after the fixed frame (always >= 1).
+func viewBudget(contentHeight int) int {
+	if b := contentHeight - viewThreadFrame; b > 0 {
+		return b
+	}
+	return 1
+}
+
 // postMeta describes the current position and size of the thread, hinting that
 // a number jumps to a specific post.
 func postMeta(pos, n, pages, sub int) string {
@@ -60,7 +70,6 @@ func postMeta(pos, n, pages, sub int) string {
 	if pages > 1 {
 		fmt.Fprintf(&sb, "  |  msg page %d of %d", sub+1, pages)
 	}
-	sb.WriteString("  |  type a number to jump")
 	return sb.String()
 }
 
@@ -100,10 +109,10 @@ func postNavBottom(sub, pages, pos, n int) string {
 }
 
 // viewThreadFrame is the fixed number of lines a view thread page renders
-// around the post block: the rule title, a blank line after it, a blank line
-// before it, the post meta line, and a blank line below it. The last blank
-// line separates the status line from the menu that follows.
-const viewThreadFrame = 5
+// around the post body: the screen rule title above the post, the post
+// header and its dash rule, the "Posted by" footer, and the meta and blank
+// lines below. The blank line separates the content from the nav menu.
+const viewThreadFrame = 6
 
 // viewThread shows a thread one message at a time. Enter / n / '>' move to the
 // next page of a long message or on to the next message; p step back;
@@ -138,16 +147,9 @@ func (s *Session) viewThread(threadID int64) error {
 			pos = n - 1
 		}
 
-		contentHeight := s.contentHeight() - 10
-		if contentHeight < 4 {
-			contentHeight = 4
-		}
 		// The block also carries header, rule, and footer lines, so a full
 		// page ends with the meta line on the last content row.
-		budget := contentHeight - viewThreadFrame - 3
-		if budget < 1 {
-			budget = 1
-		}
+		budget := viewBudget(s.contentHeight())
 
 		body := wrappedBody(posts[pos], s.contentWidth())
 		pages := postPages(body, budget)
@@ -158,7 +160,7 @@ func (s *Session) viewThread(threadID int64) error {
 			sub = pages - 1
 		}
 		block := postBlock(posts[pos], s.now(), body, sub, budget)
-		pad := contentHeight - (len(block) + viewThreadFrame)
+		pad := s.contentHeight() - (len(block) + viewThreadFrame)
 		if pad < 0 {
 			pad = 0
 		}

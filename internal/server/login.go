@@ -23,6 +23,24 @@ func (s *Session) loginFlow() (*store.User, error) {
 		}
 
 		u, err := s.cfg.Store.UserByUsername(username)
+		if errors.Is(err, store.ErrNotFound) {
+			s.print("\n" + ansi.Paint(ansi.Yellow, "'"+username+"' doesn't exist.\n\n"))
+			s.print(ansi.Paint(ansi.BrightGreen, "  [C]reate a new account\n"))
+			s.print(ansi.Paint(ansi.BrightCyan, "  [T]ry again\n"))
+			s.print(ansi.Paint(ansi.BrightRed, "  [Q]uit / hang up\n"))
+			choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, "\n> "), false)
+			if err != nil {
+				return nil, err
+			}
+			switch choice {
+			case "c":
+				return s.registerFlow()
+			case "q":
+				return nil, errQuit
+			default:
+				continue
+			}
+		}
 		if err == nil && bcrypt.CompareHashAndPassword(
 			[]byte(u.PasswordHash), []byte(password)) == nil {
 			s.print("\n" + ansi.Paint(ansi.BrightGreen,

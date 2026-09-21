@@ -14,7 +14,7 @@ func (s *Session) readBoard() error {
 		}
 		total := len(threads)
 
-		pager := NewPager(s.contentHeight() - 9)
+		pager := NewPager(s.contentHeight() - 6)
 		if pager.contentHeight < 4 {
 			pager.contentHeight = 4
 		}
