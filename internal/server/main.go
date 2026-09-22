@@ -29,6 +29,10 @@ func (s *Session) mainMenu() error {
 				if err := s.profile(); err != nil {
 					return err
 				}
+			case "users":
+				if err := s.users(); err != nil {
+					return err
+				}
 			case "logout":
 				s.print(ansi.Paint(ansi.Yellow, "Logged out. Bye, "+s.user.Username+"!\n\n"))
 				return errLogout
@@ -44,7 +48,8 @@ func (s *Session) mainMenu() error {
 		s.drawRule("")
 		s.print(ansi.Paint(ansi.BrightCyan, "  [R]ead board\n"))
 		s.print(ansi.Paint(ansi.Yellow, "  [P]rofile\n"))
-		s.print(ansi.Paint(ansi.Yellow, "  [L]ogout\n"))
+		s.print(ansi.Paint(ansi.White, "  [U]sers\n"))
+		s.print(ansi.Paint(ansi.BrightYellow, "  [L]ogout\n"))
 		s.print(ansi.Paint(ansi.BrightRed, "  [Q]uit / hang up\n"))
 		choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, "\n> "), false)
 		if err != nil {
@@ -59,13 +64,17 @@ func (s *Session) mainMenu() error {
 			if err := s.profile(); err != nil {
 				return err
 			}
+		case "u":
+			if err := s.users(); err != nil {
+				return err
+			}
 		case "l":
 			s.print(ansi.Paint(ansi.Yellow, "Logged out. Bye, "+s.user.Username+"!\n\n"))
 			return errLogout
 		case "q":
 			return errQuit
 		default:
-			s.err(fmt.Sprintf("'%s' is not a command. Try R, P, L or Q.", choice))
+			s.err(fmt.Sprintf("'%s' is not a command. Try R, P, U, L or Q.", choice))
 		}
 	}
 }

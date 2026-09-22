@@ -17,6 +17,7 @@ type User struct {
 	Location     string
 	Bio          string
 	JoinedAt     int64 // unix seconds
+	LastLogin  int64 // unix seconds, 0 = never logged in
 }
 
 // CreateUser inserts a new user. PasswordHash must already be hashed by the
@@ -44,21 +45,21 @@ func (s *Store) CreateUser(u *User) error {
 // UserByUsername looks a user up by case-insensitive username.
 func (s *Store) UserByUsername(username string) (*User, error) {
 	return scanUser(s.db.QueryRow(
-		`SELECT id, username, password_hash, location, bio, joined_at
+		`SELECT id, username, password_hash, location, bio, joined_at, last_login
 		   FROM users WHERE username = ?`, username))
 }
 
 // UserByID looks a user up by primary key.
 func (s *Store) UserByID(id int64) (*User, error) {
 	return scanUser(s.db.QueryRow(
-		`SELECT id, username, password_hash, location, bio, joined_at
+		`SELECT id, username, password_hash, location, bio, joined_at, last_login
 		   FROM users WHERE id = ?`, id))
 }
 
 func scanUser(row *sql.Row) (*User, error) {
 	var u User
 	err := row.Scan(&u.ID, &u.Username, &u.PasswordHash,
-		&u.Location, &u.Bio, &u.JoinedAt)
+		&u.Location, &u.Bio, &u.JoinedAt, &u.LastLogin)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}
@@ -66,6 +67,35 @@ func scanUser(row *sql.Row) (*User, error) {
 		return nil, fmt.Errorf("scan user: %w", err)
 	}
 	return &u, nil
+}
+
+// SetLastLogin stamps the user's last login time (unix seconds).
+func (s *Store) SetLastLogin(id, t int64) error {
+	if _, err := s.db.Exec(`UPDATE users SET last_login = ? WHERE id = ?`, t, id); err != nil {
+		return fmt.Errorf("set last login: %w", err)
+	}
+	return nil
+}
+
+// AllUsers lists every user, most recent last login first. Users who never
+// logged in (last_login 0) sort last, oldest member first among them.
+func (s *Store) AllUsers() ([]User, error) {
+	rows, err := s.db.Query(`
+		SELECT id, username, password_hash, location, bio, joined_at, last_login
+		FROM users ORDER BY last_login DESC, joined_at DESC`)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+	defer rows.Close()
+	var users []User
+	for rows.Next() {
+		var u User
+		if err := rows.Scan(&u.ID, &u.Username, &u.PasswordHash, &u.Location, &u.Bio, &u.JoinedAt, &u.LastLogin); err != nil {
+			return nil, fmt.Errorf("scan user: %w", err)
+		}
+		users = append(users, u)
+	}
+	return users, rows.Err()
 }
 
 // UpdateProfile refreshes a user's editable profile fields.

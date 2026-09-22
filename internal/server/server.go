@@ -52,7 +52,7 @@ func New(cfg Config) *Server {
 	// Load menu templates
 	cfg.menus = make(map[string]*MenuTemplate)
 	if cfg.MenuDir != "" {
-		templates := []string{"gate", "main", "profile", "edit_profile", "reply", "new_thread", "view_thread", "login", "register", "board"}
+		templates := []string{"gate", "main", "profile", "edit_profile", "reply", "new_thread", "view_thread", "login", "register", "board", "users", "view_user"}
 		for _, name := range templates {
 			path := filepath.Join(cfg.MenuDir, name+".txt")
 			t, err := LoadMenuTemplate(path)

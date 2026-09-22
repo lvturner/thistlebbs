@@ -1,0 +1,15 @@
+locator: "Users"
+rule: "Users - page {page} of {pages}"
+prompt: "> "
+error: "'%s' is not a command.  Numbers open a profile."
+bind:
+  - keys: [q, quit]
+    action: quit
+  - keys: [">", next]
+    action: next
+  - keys: ["<", prev]
+    action: prev
+---
+{rule_title}
+---post---
+{users}

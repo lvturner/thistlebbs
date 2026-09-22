@@ -69,5 +69,14 @@ func migrate(db *sql.DB) error {
 			return fmt.Errorf("commit migration: %w", err)
 		}
 	}
+	if v < 2 {
+		// v2: users.last_login, stamped on every successful login.
+		if _, err := db.Exec(`ALTER TABLE users ADD COLUMN last_login INTEGER NOT NULL DEFAULT 0`); err != nil {
+			return fmt.Errorf("apply schema v2: %w", err)
+		}
+		if _, err := db.Exec("PRAGMA user_version = 2"); err != nil {
+			return fmt.Errorf("set user_version 2: %w", err)
+		}
+	}
 	return nil
 }

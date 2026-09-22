@@ -171,12 +171,53 @@ func TestThreadPaging(t *testing.T) {
 	}
 }
 
+func TestSetLastLogin(t *testing.T) {
+	s := setupTestStore(t)
+	u := &User{Username: "gina", PasswordHash: "h", JoinedAt: 1}
+	if err := s.CreateUser(u); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if err := s.SetLastLogin(u.ID, 500); err != nil {
+		t.Fatalf("set last login: %v", err)
+	}
+	got, _ := s.UserByID(u.ID)
+	if got.LastLogin != 500 {
+		t.Fatalf("expected last login 500, got %d", got.LastLogin)
+	}
+}
+
+func TestAllUsersOrdering(t *testing.T) {
+	s := setupTestStore(t)
+	a := &User{Username: "alice", PasswordHash: "h", JoinedAt: 1}
+	b := &User{Username: "bob", PasswordHash: "h", JoinedAt: 2}
+	c := &User{Username: "carol", PasswordHash: "h", JoinedAt: 3}
+	s.CreateUser(a)
+	s.CreateUser(b)
+	s.CreateUser(c)
+
+	// carol logged in latest, bob never, alice second.
+	s.SetLastLogin(c.ID, 300)
+	s.SetLastLogin(a.ID, 100)
+
+	got, err := s.AllUsers()
+	if err != nil {
+		t.Fatalf("all users: %v", err)
+	}
+	if len(got) != 3 {
+		t.Fatalf("expected 3 users, got %d", len(got))
+	}
+	if got[0].Username != "carol" || got[1].Username != "alice" || got[2].Username != "bob" {
+		t.Fatalf("unexpected order: %s, %s, %s",
+			got[0].Username, got[1].Username, got[2].Username)
+	}
+}
+
 func TestMigrateIdempotent(t *testing.T) {
 	s := setupTestStore(t)
 	// Running migrate again shouldn't fail
 	var v int
 	err := s.db.QueryRow("PRAGMA user_version").Scan(&v)
-	if err != nil || v != 1 {
-		t.Fatalf("expected version 1, got v=%d err=%v", v, err)
+	if err != nil || v != 2 {
+		t.Fatalf("expected version 2, got v=%d err=%v", v, err)
 	}
 }

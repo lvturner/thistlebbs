@@ -43,6 +43,11 @@ func (s *Session) loginFlow() (*store.User, error) {
 		}
 		if err == nil && bcrypt.CompareHashAndPassword(
 			[]byte(u.PasswordHash), []byte(password)) == nil {
+			t := s.now()
+			if err := s.cfg.Store.SetLastLogin(u.ID, t); err != nil {
+				s.err("Could not note your login time.")
+			}
+			u.LastLogin = t
 			s.print("\n" + ansi.Paint(ansi.BrightGreen,
 				"\u2714  Welcome back, "+u.Username+"!\n\n"))
 			return u, nil
