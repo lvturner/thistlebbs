@@ -8,10 +8,10 @@ import (
 )
 
 func TestPaintNav(t *testing.T) {
-	if got := paintNav(ansi.Green, ""); got != "" {
+	if got := paintNav(""); got != "" {
 		t.Errorf("empty item: got %q, want empty", got)
 	}
-	got := paintNav(ansi.Yellow, "[N]ext")
+	got := paintNav("[N]ext")
 	if got != ansi.FG(ansi.Yellow)+"[N]ext"+ansi.Reset {
 		t.Errorf("painted item: got %q", got)
 	}

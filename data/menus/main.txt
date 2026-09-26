@@ -1,21 +1,22 @@
 locator: "Main Menu"
 rule: "Main"
 prompt: "\n> "
-error: "'%s' is not a command. Try R, P, U, L or Q."
+error: "'%s' is not a command. Try R, G, U, P or L."
 bind:
   - keys: [r, read]
     action: read
-  - keys: [p, profile]
-    action: profile
+  - keys: [g, games, door]
+    action: games
   - keys: [u, users]
     action: users
-  - keys: [l, logout]
+  - keys: [p, profile]
+    action: profile
+  - keys: [l, logoff]
     action: logout
-  - keys: [q, quit, hangup, hang]
-    action: quit
 ---
 {green}  [R]ead board{reset}
-{cyan}  [P]rofile{reset}
+{magenta}  [G]ames{reset}
 {white}  [U]sers{reset}
-{yellow}  [L]ogout{reset}
-{red}  [Q]uit / hang up{reset}
+{blank}
+{cyan}  [P]rofile{reset}
+{yellow}  [L]ogoff{reset}

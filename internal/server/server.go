@@ -22,8 +22,9 @@ type Config struct {
 	Store      *store.Store
 	BannerPath string // path to banner.txt; empty = use built-in
 	MenuDir    string // path to menus/ directory; empty = no templates
+	Games      *Door  // outbound games door (gOLD mINE); nil = not configured
 
-	banner string                 // rendered banner, loaded once in New
+	banner string                   // rendered banner, loaded once in New
 	menus  map[string]*MenuTemplate // loaded menu templates, keyed by name
 }
 
@@ -52,7 +53,7 @@ func New(cfg Config) *Server {
 	// Load menu templates
 	cfg.menus = make(map[string]*MenuTemplate)
 	if cfg.MenuDir != "" {
-		templates := []string{"gate", "main", "profile", "edit_profile", "reply", "new_thread", "view_thread", "login", "register", "board", "users", "view_user"}
+		templates := []string{"gate", "main", "games", "profile", "edit_profile", "reply", "new_thread", "view_thread", "login", "register", "board", "users", "view_user"}
 		for _, name := range templates {
 			path := filepath.Join(cfg.MenuDir, name+".txt")
 			t, err := LoadMenuTemplate(path)

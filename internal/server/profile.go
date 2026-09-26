@@ -71,9 +71,14 @@ func (s *Session) profile() error {
 }
 
 func (s *Session) editProfile() error {
-	s.header("Edit Profile", s.ruleTitle("edit_profile", nil))
-	s.print(ansi.Paint(ansi.BrightBlack,
-		"Press Enter to keep the current value.\n\n"))
+	if tmpl := s.cfg.menus["edit_profile"]; tmpl != nil {
+		s.header(tmpl.RenderLocator(nil), tmpl.RenderRule(nil))
+		s.print(tmpl.Render(nil, s.contentWidth()))
+	} else {
+		s.header("Edit Profile", s.ruleTitle("edit_profile", nil))
+		s.print(ansi.Paint(ansi.BrightBlack,
+			"Press Enter to keep the current value.\n\n"))
+	}
 
 	get := func(prompt, current string) (string, error) {
 		line, err := s.readLine(ansi.Paint(ansi.BrightCyan, prompt)+": ", false)

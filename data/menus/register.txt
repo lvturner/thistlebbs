@@ -1,3 +1,4 @@
 locator: New Account Registration
 rule: "Join Us!"
 ---
+{black}Entering your name or location is optional. Passwords are stored hashed.{reset}

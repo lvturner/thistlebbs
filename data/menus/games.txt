@@ -1,0 +1,16 @@
+locator: "Games List"
+rule: "Games List"
+prompt: "\n> "
+error: "'%s' is not a command. Try W, M or Q."
+bind:
+  - keys: [w, wordle]
+    action: wordle
+  - keys: [m, more, moregames]
+    action: more
+  - keys: [q, quit]
+    action: quit
+---
+{cyan}  [W]ordle{reset}
+{magenta}  [M]ore Games{reset}
+{blank}
+{red}  [Q]uit{reset}

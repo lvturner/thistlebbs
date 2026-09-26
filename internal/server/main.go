@@ -33,10 +33,12 @@ func (s *Session) mainMenu() error {
 				if err := s.users(); err != nil {
 					return err
 				}
+			case "games":
+				if err := s.gamesListMenu(); err != nil {
+					return err
+				}
 			case "logout":
-				s.print(ansi.Paint(ansi.Yellow, "Logged out. Bye, "+s.user.Username+"!\n\n"))
-				return errLogout
-			case "quit":
+				s.print(ansi.Paint(ansi.Yellow, "Logged off. Goodbye, "+s.user.Username+"!\n\n"))
 				return errQuit
 			default:
 				s.err(tmpl.Errorf(choice))
@@ -47,10 +49,11 @@ func (s *Session) mainMenu() error {
 		s.header("Main Menu", "")
 		s.drawRule("")
 		s.print(ansi.Paint(ansi.BrightCyan, "  [R]ead board\n"))
-		s.print(ansi.Paint(ansi.Yellow, "  [P]rofile\n"))
-		s.print(ansi.Paint(ansi.White, "  [U]sers\n"))
-		s.print(ansi.Paint(ansi.BrightYellow, "  [L]ogout\n"))
-		s.print(ansi.Paint(ansi.BrightRed, "  [Q]uit / hang up\n"))
+		s.print(ansi.Paint(ansi.BrightMagenta, "  [G]ames\n"))
+		s.print(ansi.Paint(ansi.BrightWhite, "  [U]sers\n"))
+		s.print("\n")
+		s.print(ansi.Paint(ansi.BrightYellow, "  [P]rofile\n"))
+		s.print(ansi.Paint(ansi.BrightYellow, "  [L]ogoff\n"))
 		choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, "\n> "), false)
 		if err != nil {
 			return err
@@ -68,13 +71,15 @@ func (s *Session) mainMenu() error {
 			if err := s.users(); err != nil {
 				return err
 			}
+		case "g":
+			if err := s.gamesListMenu(); err != nil {
+				return err
+			}
 		case "l":
-			s.print(ansi.Paint(ansi.Yellow, "Logged out. Bye, "+s.user.Username+"!\n\n"))
-			return errLogout
-		case "q":
+			s.print(ansi.Paint(ansi.BrightYellow, "Logged off. Goodbye, "+s.user.Username+"!\n\n"))
 			return errQuit
 		default:
-			s.err(fmt.Sprintf("'%s' is not a command. Try R, P, U, L or Q.", choice))
+			s.err(fmt.Sprintf("'%s' is not a command. Try R, G, U, P or L.", choice))
 		}
 	}
 }

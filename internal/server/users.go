@@ -52,6 +52,22 @@ func (s *Session) users() error {
 			}
 		}
 
+		nav := buildNav(
+			paintNav("[#] open profile"),
+			func() string {
+				if pager.CanNext() {
+					return paintNav("[N]ext")
+				}
+				return ""
+			}(),
+			func() string {
+				if pager.CanPrev() {
+					return paintNav("[P]rev")
+				}
+				return ""
+			}(),
+			paintNav("[Q]uit"),
+		)
 		tmpl := s.cfg.menus["users"]
 		if tmpl != nil && tmpl.HasPostTemplate() {
 			s.paint()
@@ -61,29 +77,15 @@ func (s *Session) users() error {
 			}
 			vars["rule_title"] = ansi.Paint(ansi.BrightBlue, ansi.Rule(s.contentWidth(), tmpl.RenderRule(vars)))
 			s.print(strings.TrimPrefix(tmpl.Render(vars, s.contentWidth()), "\n"))
-			s.print(tmpl.RenderPost(map[string]string{"users": pager.Render(s.contentWidth())}))
+			s.print(tmpl.RenderPost(map[string]string{
+				"users": pager.Render(s.contentWidth()),
+				"nav":   nav,
+			}))
 		} else {
 			s.header(fmt.Sprintf("Users - page %d of %d", pager.Page()+1, pager.TotalPages()), s.ruleTitle("users", nil))
 			s.print(pager.Render(s.contentWidth()))
+			s.print(nav + "\n")
 		}
-
-		nav := buildNav(
-			paintNav(ansi.Green, "[#] open profile"),
-			func() string {
-				if pager.CanNext() {
-					return paintNav(ansi.BrightYellow, "[N]ext")
-				}
-				return ""
-			}(),
-			func() string {
-				if pager.CanPrev() {
-					return paintNav(ansi.BrightYellow, "[P]rev")
-				}
-				return ""
-			}(),
-			paintNav(ansi.BrightRed, "[Q]uit"),
-		)
-		s.print(nav + "\n")
 		s.print("\n")
 		choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, "> "), true)
 		if err != nil {

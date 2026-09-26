@@ -13,3 +13,4 @@ bind:
 {rule_title}
 ---post---
 {users}
+{nav}

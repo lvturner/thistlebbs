@@ -22,6 +22,8 @@ func main() {
 		board      = flag.String("name", "Thistle BBS", "display name of the system")
 		bannerPath = flag.String("banner", "data/banner.txt", "path to banner file (empty = built-in)")
 		menuDir    = flag.String("menu-dir", "data/menus", "path to menu templates directory (empty = no templates)")
+		games      = flag.String("games", "goldminedoors.com:2513", "games door address (gOLD mINE), host:port (empty = disabled)")
+		gamesTag   = flag.String("games-tag", "FPO", "3-character BBS tag sent to the games door as [TAG]<username> (empty = disabled)")
 		version    = flag.Bool("version", false, "print version and exit")
 	)
 	flag.Parse()
@@ -49,7 +51,18 @@ func main() {
 	log.Printf("Thistle BBS listening on %s (board: %q, db: %s)",
 		ln.Addr(), *board, *dbPath)
 
-	cfg := server.Config{BoardName: *board, Store: st, BannerPath: *bannerPath, MenuDir: *menuDir}
+	var gamesDoor *server.Door
+	if *games != "" && *gamesTag != "" {
+		gamesDoor = &server.Door{Name: "gOLD mINE", Addr: *games, Tag: *gamesTag}
+	}
+
+	cfg := server.Config{
+		BoardName:  *board,
+		Store:      st,
+		BannerPath: *bannerPath,
+		MenuDir:    *menuDir,
+		Games:      gamesDoor,
+	}
 	srv := server.New(cfg)
 
 	ctx, stop := signal.NotifyContext(context.Background(),

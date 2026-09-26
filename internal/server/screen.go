@@ -6,9 +6,8 @@ import (
 	"thistlebbs/internal/store"
 )
 
-var errLogout = errors.New("logout")
-
-// errQuit terminates the session (hang up) when returned from the main menu.
+// errQuit terminates the session (hang up) when returned from the main menu
+// (logoff).
 var errQuit = errors.New("quit")
 
 // Menu actions returned by the front gate.
@@ -88,8 +87,6 @@ func (s *Session) run() error {
 		if err := s.mainMenu(); err != nil {
 			s.user = nil
 			switch {
-			case errors.Is(err, errLogout):
-				continue // back to the gate
 			case errors.Is(err, errQuit):
 				return nil // hang up
 			default:

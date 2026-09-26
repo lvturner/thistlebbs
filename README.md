@@ -16,6 +16,8 @@ Connect with any telnet client.
 - Multi-line message editor (end with `.` on its own line)
 - Paginated thread listing and per-message post viewing (jump to any post by number)
 - Profile view and edit
+- Outbound RLOGIN door: the [G]ames menu item connects to the gOLD mINE
+  community door server (see the `-games` / `-games-tag` flags)
 - SQLite persistence (WAL mode, busy timeout)
 - Template-driven menus loaded from `data/menus/`
 
@@ -40,6 +42,8 @@ thistlebbs [flags]
 
   -banner string   path to banner file (empty = built-in) (default "data/banner.txt")
   -db string       path to the SQLite database file (default "data/thistlebbs.db")
+  -games string      games door address (gOLD mINE), host:port (empty = disabled) (default "goldminedoors.com:2513")
+  -games-tag string 3-character BBS tag sent to the games door as [TAG]<username> (empty = disabled) (default "FPO")
   -listen string   address to listen on (host:port) (default ":1997")
   -menu-dir string path to menu templates directory (empty = no templates) (default "data/menus")
   -name string     display name of the system (default "Thistle BBS")

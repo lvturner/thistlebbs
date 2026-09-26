@@ -166,6 +166,31 @@ func (s *Session) viewThread(threadID int64) error {
 		}
 
 		meta := postMeta(pos, n, pages, sub)
+		nav := buildNav(
+			paintNav("[R]eply"),
+			paintNav(postNavNext(sub, pages, pos, n)),
+			paintNav(postNavPrev(sub, pages, pos, n)),
+			paintNav(postNavTop(sub, pages, pos, n)),
+			paintNav(postNavBottom(sub, pages, pos, n)),
+			paintNav("[#] jump"),
+			paintNav("[Q]uit"),
+		)
+		next := func() {
+			if sub < pages-1 {
+				sub++
+			} else if pos < n-1 {
+				pos++
+				sub = 0
+			}
+		}
+		prev := func() {
+			if sub > 0 {
+				sub--
+			} else if pos > 0 {
+				pos--
+				sub = postPages(wrappedBody(posts[pos], s.contentWidth()), budget) - 1
+			}
+		}
 		tmpl := s.cfg.menus["view_thread"]
 		if tmpl != nil && tmpl.HasPostTemplate() {
 			s.paint()
@@ -179,6 +204,7 @@ func (s *Session) viewThread(threadID int64) error {
 				"post": strings.Join(block, "\n"),
 				"pad":  strings.Repeat("\n", pad),
 				"meta": ansi.Paint(ansi.BrightBlack, meta),
+				"nav":  nav,
 			}))
 		} else {
 			s.header(fmt.Sprintf("%s — %s", t.Title, meta))
@@ -186,69 +212,87 @@ func (s *Session) viewThread(threadID int64) error {
 				s.print(l + "\n")
 			}
 			s.scroll(pad)
+			s.print(nav + "\n")
 		}
-
-		nav := buildNav(
-			paintNav(ansi.Green, "[R]eply"),
-			paintNav(ansi.Yellow, postNavNext(sub, pages, pos, n)),
-			paintNav(ansi.Yellow, postNavPrev(sub, pages, pos, n)),
-			paintNav(ansi.Yellow, postNavTop(sub, pages, pos, n)),
-			paintNav(ansi.Yellow, postNavBottom(sub, pages, pos, n)),
-			paintNav(ansi.Green, "[#] jump"),
-			paintNav(ansi.Red, "[Q]uit"),
-		)
-		s.print(nav + "\n")
 		s.print("\n")
 		choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, "> "), true)
 		if err != nil {
 			return err
 		}
-		switch {
-		case choice == "q":
-			return nil
-		case choice == "r":
-			if err := s.reply(threadID); err != nil {
-				return err
-			}
-			jumpLast = true
-		case choice == ">" || choice == "n" || choice == "":
-			if sub < pages-1 {
-				sub++
-			} else if pos < n-1 {
-				pos++
-				sub = 0
-			}
-		case choice == "<" || choice == "p":
-			if sub > 0 {
-				sub--
-			} else if pos > 0 {
-				pos--
-				sub = postPages(wrappedBody(posts[pos], s.contentWidth()), budget) - 1
-			}
-		case choice == "t":
-			pos, sub = 0, 0
-		case choice == "b":
-			pos = n - 1
-			sub = postPages(wrappedBody(posts[pos], s.contentWidth()), budget) - 1
-		default:
-			if num, err := strconv.Atoi(choice); err == nil {
-				if num >= 1 && num <= n {
-					pos, sub = num-1, 0
-				} else {
-					s.err("No such post number.")
+		if tmpl != nil {
+			switch tmpl.MatchInput(choice) {
+			case "quit":
+				return nil
+			case "reply":
+				if err := s.reply(threadID); err != nil {
+					return err
 				}
-			} else {
-				s.err(fmt.Sprintf("'%s' is not a command.", choice))
+				jumpLast = true
+			case "next":
+				next()
+			case "prev":
+				prev()
+			case "top":
+				pos, sub = 0, 0
+			case "bottom":
+				pos, sub = n-1, postPages(wrappedBody(posts[n-1], s.contentWidth()), budget)-1
+			default:
+				if choice == "" || choice == ">" {
+					next()
+				} else if choice == "<" {
+					prev()
+				} else if num, err := strconv.Atoi(choice); err == nil {
+					if num >= 1 && num <= n {
+						pos, sub = num-1, 0
+					} else {
+						s.err("No such post number.")
+					}
+				} else {
+					s.err(tmpl.Errorf(choice))
+				}
+			}
+		} else {
+			switch {
+			case choice == "q":
+				return nil
+			case choice == "r":
+				if err := s.reply(threadID); err != nil {
+					return err
+				}
+				jumpLast = true
+			case choice == ">" || choice == "n" || choice == "":
+				next()
+			case choice == "<" || choice == "p":
+				prev()
+			case choice == "t":
+				pos, sub = 0, 0
+			case choice == "b":
+				pos, sub = n-1, postPages(wrappedBody(posts[n-1], s.contentWidth()), budget)-1
+			default:
+				if num, err := strconv.Atoi(choice); err == nil {
+					if num >= 1 && num <= n {
+						pos, sub = num-1, 0
+					} else {
+						s.err("No such post number.")
+					}
+				} else {
+					s.err(fmt.Sprintf("'%s' is not a command.", choice))
+				}
 			}
 		}
 	}
 }
 
 func (s *Session) reply(threadID int64) error {
-	s.header("Reply to thread", s.ruleTitle("reply", nil))
-	s.print(ansi.Paint(ansi.BrightBlack,
-		"Write your reply.  End the message with '.' on its own line.\n"+
+	if tmpl := s.cfg.menus["reply"]; tmpl != nil {
+		s.header(tmpl.RenderLocator(nil), tmpl.RenderRule(nil))
+		s.print(tmpl.Render(nil, s.contentWidth()))
+	} else {
+		s.header("Reply to thread", s.ruleTitle("reply", nil))
+		s.print(ansi.Paint(ansi.BrightBlack,
+			"Write your reply.  End the message with '.' on its own line.\n"+
 			"Ctrl-C aborts.\n\n"))
+	}
 	body, err := s.readText("")
 	if err != nil {
 		if errors.Is(err, ErrAbort) {
@@ -270,8 +314,17 @@ func (s *Session) reply(threadID int64) error {
 }
 
 func (s *Session) newThread() error {
-	s.header("Start a New Thread", s.ruleTitle("new_thread", nil))
-	title, err := s.readLine(ansi.Paint(ansi.BrightCyan, "Title: "), false)
+	tmpl := s.cfg.menus["new_thread"]
+	if tmpl != nil {
+		s.header(tmpl.RenderLocator(nil), tmpl.RenderRule(nil))
+	} else {
+		s.header("Start a New Thread", s.ruleTitle("new_thread", nil))
+	}
+	titlePrompt := "Title: "
+	if tmpl != nil && tmpl.Prompt != "" {
+		titlePrompt = tmpl.Prompt
+	}
+	title, err := s.readLine(ansi.Paint(ansi.BrightCyan, titlePrompt), false)
 	if err != nil {
 		return err
 	}
@@ -281,8 +334,12 @@ func (s *Session) newThread() error {
 	}
 	title = clip(title, 80)
 	s.print("\n")
-	s.print(ansi.Paint(ansi.BrightBlack,
-		"Enter the first message.  End with '.' on its own line, Ctrl-C to abort.\n"))
+	if tmpl != nil {
+		s.print(tmpl.Render(nil, s.contentWidth()))
+	} else {
+		s.print(ansi.Paint(ansi.BrightBlack,
+			"Enter the first message.  End with '.' on its own line, Ctrl-C to abort.\n"))
+	}
 	body, err := s.readText("")
 	if err != nil {
 		if errors.Is(err, ErrAbort) {

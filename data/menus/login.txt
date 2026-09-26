@@ -1,3 +1,16 @@
 locator: Existing User Login
 rule: "Login"
+prompt: "> "
+error: "'%s' is not a command. Try C, T or Q."
+bind:
+  - keys: [c, create]
+    action: create
+  - keys: [t, try, retry]
+    action: retry
+  - keys: [q, quit]
+    action: quit
 ---
+{yellow}'{username}' doesn't exist.{reset}
+  [C]reate a new account
+  [T]ry again
+  [Q]uit / hang up

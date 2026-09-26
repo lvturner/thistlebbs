@@ -20,15 +20,20 @@ var (
 	ErrClosed = errors.New("connection closed")
 	// ErrHangUp is returned when the user types Ctrl-D to hang up.
 	ErrHangUp = errors.New("hang up")
+	// ErrQueueAbort is returned from readByte after abort; it means "the
+	// current phase is over, stop reading", not that the session is done.
+	ErrQueueAbort = errors.New("input queue aborted")
 )
 
 // inputQueue is a byte FIFO fed by the read loop and drained by the line
-// reader. Closing the queue wakes any blocked reader with ErrClosed.
+// reader. Closing the queue wakes any blocked reader with ErrClosed; abort
+// wakes any blocked reader with ErrQueueAbort without closing the queue.
 type inputQueue struct {
-	mu     sync.Mutex
-	cond   *sync.Cond
-	buf    []byte
-	closed bool
+	mu      sync.Mutex
+	cond    *sync.Cond
+	buf     []byte
+	closed  bool
+	aborted bool
 }
 
 func newInputQueue() *inputQueue {
@@ -43,6 +48,7 @@ func (q *inputQueue) append(b []byte) {
 	if q.closed {
 		return
 	}
+	q.aborted = false
 	q.buf = append(q.buf, b...)
 	q.cond.Broadcast()
 }
@@ -54,12 +60,26 @@ func (q *inputQueue) close() {
 	q.mu.Unlock()
 }
 
+// abort wakes any blocked reader with ErrQueueAbort and clears the flag, so
+// queued readers can be stopped mid-phase (e.g. a door closing) without
+// ending the session.
+func (q *inputQueue) abort() {
+	q.mu.Lock()
+	q.aborted = true
+	q.cond.Broadcast()
+	q.mu.Unlock()
+}
+
 func (q *inputQueue) readByte() (byte, error) {
 	q.mu.Lock()
 	defer q.mu.Unlock()
 	for len(q.buf) == 0 {
 		if q.closed {
 			return 0, ErrClosed
+		}
+		if q.aborted {
+			q.aborted = false
+			return 0, ErrQueueAbort
 		}
 		q.cond.Wait()
 	}

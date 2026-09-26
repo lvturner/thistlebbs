@@ -1,8 +1,5 @@
 locator: Start a New Thread
 rule: "New Thread"
 prompt: "Title: "
-error_title: "No title, no thread."
-error_empty: "Thread had empty body; nothing posted."
-error_store: "Could not create the thread right now."
 ---
 {black}Enter the first message.  End with '.' on its own line, Ctrl-C to abort.{reset}

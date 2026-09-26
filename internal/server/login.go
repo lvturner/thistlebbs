@@ -7,9 +7,22 @@ import (
 	"thistlebbs/internal/store"
 )
 
+// stampLogin records a successful login (unix seconds) for the user.
+func (s *Session) stampLogin(u *store.User) {
+	t := s.now()
+	if err := s.cfg.Store.SetLastLogin(u.ID, t); err != nil {
+		s.err("Could not note your login time.")
+	}
+	u.LastLogin = t
+}
+
 func (s *Session) loginFlow() (*store.User, error) {
 	for {
-		s.header("Existing User Login", s.ruleTitle("login", nil))
+		if tmpl := s.cfg.menus["login"]; tmpl != nil {
+			s.header(tmpl.RenderLocator(nil), tmpl.RenderRule(nil))
+		} else {
+			s.header("Existing User Login", s.ruleTitle("login", nil))
+		}
 		username, err := s.readLine(ansi.Paint(ansi.BrightCyan, "Username: "), false)
 		if err != nil {
 			return nil, err
@@ -24,6 +37,29 @@ func (s *Session) loginFlow() (*store.User, error) {
 
 		u, err := s.cfg.Store.UserByUsername(username)
 		if errors.Is(err, store.ErrNotFound) {
+			if tmpl := s.cfg.menus["login"]; tmpl != nil {
+				prompt := tmpl.Prompt
+				if prompt == "" {
+					prompt = "> "
+				}
+				s.print(tmpl.Render(map[string]string{"username": username}, s.contentWidth()))
+				choice, err := s.readSingleKey(ansi.Paint(ansi.BrightCyan, prompt), false)
+				if err != nil {
+					return nil, err
+				}
+				switch tmpl.MatchInput(choice) {
+				case "create":
+					return s.registerFlow()
+				case "quit":
+					return nil, errQuit
+				case "retry":
+					continue
+				default:
+					s.err(tmpl.Errorf(choice))
+					continue
+				}
+			}
+			// Fallback: hardcoded
 			s.print("\n" + ansi.Paint(ansi.Yellow, "'"+username+"' doesn't exist.\n\n"))
 			s.print(ansi.Paint(ansi.BrightGreen, "  [C]reate a new account\n"))
 			s.print(ansi.Paint(ansi.BrightCyan, "  [T]ry again\n"))
@@ -43,11 +79,7 @@ func (s *Session) loginFlow() (*store.User, error) {
 		}
 		if err == nil && bcrypt.CompareHashAndPassword(
 			[]byte(u.PasswordHash), []byte(password)) == nil {
-			t := s.now()
-			if err := s.cfg.Store.SetLastLogin(u.ID, t); err != nil {
-				s.err("Could not note your login time.")
-			}
-			u.LastLogin = t
+			s.stampLogin(u)
 			s.print("\n" + ansi.Paint(ansi.BrightGreen,
 				"\u2714  Welcome back, "+u.Username+"!\n\n"))
 			return u, nil
@@ -58,10 +90,15 @@ func (s *Session) loginFlow() (*store.User, error) {
 }
 
 func (s *Session) registerFlow() (*store.User, error) {
-	s.header("New Account Registration", s.ruleTitle("register", nil))
-	s.drawRule("")
-	s.print(ansi.Paint(ansi.BrightBlack,
-		"Entering your name or location is optional. Passwords are stored hashed.\n\n"))
+	if tmpl := s.cfg.menus["register"]; tmpl != nil {
+		s.header(tmpl.RenderLocator(nil), tmpl.RenderRule(nil))
+		s.print(tmpl.Render(nil, s.contentWidth()))
+	} else {
+		s.header("New Account Registration", s.ruleTitle("register", nil))
+		s.drawRule("")
+		s.print(ansi.Paint(ansi.BrightBlack,
+			"Entering your name or location is optional. Passwords are stored hashed.\n\n"))
+	}
 
 	username, err := s.readLine(ansi.Paint(ansi.BrightCyan, "Choose a username: "), false)
 	if err != nil {
@@ -115,6 +152,7 @@ func (s *Session) registerFlow() (*store.User, error) {
 		}
 		return nil, nil
 	}
+	s.stampLogin(user)
 
 	s.print("\n" + ansi.Paint(ansi.BrightGreen,
 		"\u2714  Account created!  Welcome, "+user.Username+"!\n\n"))

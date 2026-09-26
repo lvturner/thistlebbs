@@ -111,10 +111,10 @@ func buildNav(items ...string) string {
 }
 
 // paintNav colours a buildNav item, leaving empty items empty so buildNav
-// still drops them. Colours are non-bold to match the gate/main menus.
-func paintNav(col int, s string) string {
+// still drops them. Colours come from navColors in navstyle.go.
+func paintNav(s string) string {
 	if s == "" {
 		return ""
 	}
-	return ansi.FG(col) + s + ansi.Reset
+	return ansi.FG(navColor(s)) + s + ansi.Reset
 }

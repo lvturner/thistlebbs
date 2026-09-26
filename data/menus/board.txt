@@ -1,3 +1,20 @@
-locator: "Message Board - page {page} of {pages}"
-rule: "Board"
+locator: "Message Board"
+rule: "Message Board - page {page} of {pages}"
+prompt: "> "
+error: "'%s' is not a command."
+bind:
+  - keys: [q, quit]
+    action: quit
+  - keys: [n, new]
+    action: new
+  - keys: [">", next]
+    action: next
+  - keys: ["<", prev, p]
+    action: prev
+  - keys: [t, top]
+    action: top
 ---
+{rule_title}
+---post---
+{board}
+{nav}

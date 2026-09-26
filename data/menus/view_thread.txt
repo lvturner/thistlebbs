@@ -19,3 +19,4 @@ bind:
 {post}
 {pad}
 {meta}
+{nav}
